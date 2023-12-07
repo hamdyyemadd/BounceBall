@@ -1,10 +1,17 @@
 package BounceBall;
 
+import com.sun.opengl.util.j2d.TextRenderer;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.BitSet;
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
@@ -13,16 +20,19 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 
-public class Ball_File extends AnimListener implements GLEventListener, MouseListener, MouseMotionListener {
+public class Ball_File extends AnimListener implements GLEventListener, MouseListener, MouseMotionListener, KeyListener {
+
+    TextRenderer ren = new TextRenderer(new Font("sanaSerif", Font.BOLD, 10));
 
     AudioInputStream audioStream;
     Clip clip;
-
+    ArrayList<block> blocksArray = new ArrayList<>();
     GL gl;
     String page = "Home", level, direction = "up-right";
     boolean sound = true, startGame;
-    block[] blocksArray = new block[42];
-    int maxWidth = 1200, maxHeight = 700, borderX = 550, borderY = 680, ballX = 550, ballY = 655;
+//    block[] blocksArray = new block[42];
+    int maxWidth = 1200, maxHeight = 700, borderX = 550, borderY = 680, ballX = 550, ballY = 655,
+            speed = 20, borderSize = 130, lives = 3, delayLives;
 
     String textureNames[] = {"home", "empty", "credits", "how_to_play", "sound", "no_sound", "levels", "ball", "border", "square"};
     TextureReader.Texture[] texture = new TextureReader.Texture[textureNames.length];
@@ -36,7 +46,6 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
             clip.open(audioStream);
             clip.start();
         } catch (Exception ex) {
-            System.out.println("sound error");
             System.err.println(ex.getMessage());
         }
 
@@ -90,10 +99,11 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
                 break;
             case "Game":
                 DrawBackground(1);
+                drawBlocks();
                 drawObject(borderX, borderY, 1, 0.3, 8);
                 drawObject(ballX, ballY, 0.4, 0.5, 7);
-//                bounceBall();
-                drawBlocks();
+                borderCollision();
+                bounceBall();
                 break;
 
         }
@@ -154,40 +164,93 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
     public void bounceBall() {
         if (startGame) {
             switch (direction) {
-                case "up-right": // up-right
-                    ballX += 10;
-                    ballY -= 10;
+                case "up-right":
+                    if (ballX > maxWidth - 100) {
+                        direction = "up-left";
+                    }
+                    if (ballY < 50) {
+                        direction = "down-right";
+                    }
+                    ballX += speed;
+                    ballY -= speed;
                     break;
-                case "up-left": // up-left
-                    ballX -= 10;
-                    ballY -= 10;
+                case "up-left":
+                    if (ballX < 0) {
+                        direction = "up-right";
+                    }
+                    if (ballY < 50) {
+                        direction = "down-left";
+                    }
+                    ballX -= speed;
+                    ballY -= speed;
                     break;
-                case "down-right": // down-right
-                    ballX += 10;
-                    ballY += 10;
+                case "down-right":
+                    if (ballX > maxWidth - 100) {
+                        direction = "down-left";
+                    }
+                    ballX += speed;
+                    ballY += speed;
                     break;
-                case "down-left": // down-left
-                    ballX -= 10;
-                    ballY -= 10;
+                case "down-left":
+                    if (ballX < 0) {
+                        direction = "down-right";
+                    }
+                    ballX -= speed;
+                    ballY += speed;
                     break;
+
             }
-            System.out.println("direction: " + direction);
-            if (direction == "up-right" && (ballX > 1000 || ballY < 0)) {
-                direction = "up-left";
-            } else if (direction == "up-left" && (ballX < 0 || ballY < 0)) {
-                direction = "down-left";
-            } else if (direction == "down-left" && (ballX < 0 || ballY > maxHeight)) {
-                direction = "down-right";
-            } else if (direction == "down-right" && (ballX > 1000 || ballY > maxHeight)) {
-                direction = "up-right";
-            }
+
         }
     }
 
+    void borderCollision() {
+        if (ballY > 645 && ballX - borderX < borderSize / 2 && ballX - borderX > 0) {
+            direction = "up-right";
+        } else if (ballY > 645 && ballX - borderX + 70 < borderSize / 2 && ballX - borderX + 70 > 0) {
+            direction = "up-left";
+        } else if (ballY > 700) {
+
+            Lose();
+        }
+    }
+
+    void Lose() {
+        startGame = false;
+        delayLives++;
+        ren.beginRendering(100, 100);
+        ren.setColor(Color.RED);
+
+        if (lives - 1 > 0) {
+            ren.draw("Lives: " + (lives - 1), 25, 48);
+        } else {
+            ren.draw("Gameover", 25, 60);
+        }
+        ren.setColor(Color.WHITE);
+        ren.endRendering();
+        if (delayLives > 20) {
+            lives--;
+            direction = "up-right";
+            ballX = 550;
+            ballY = 655;
+            borderX = 550;
+            borderY = 680;
+            delayLives = 0;
+            if (lives == 0) {
+                page = "Home";
+            }
+        }
+
+        System.out.println("GameOver");
+    }
+
     public void drawBlocks() {
+
+        int numberofBlocks = level == "easy" ? 42 : level == "medium" ? 70 : 98;
+
         int x = 100, y = 100;
-        for (int i = 0; i < blocksArray.length; i++) {
-            blocksArray[i] = new block(x, y);
+        for (int i = 0; i < numberofBlocks; i++) {
+            blocksArray.add(new block(x, y));
             if (i % 14 == 0 && i != 0) {
                 y += 50;
                 x = 100;
@@ -275,10 +338,40 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
     @Override
     public void mouseMoved(MouseEvent e) {
         System.out.println(e.getX() + " " + e.getY());
+        System.out.println("ball = " + ballX + " " + ballY);
         if (e.getX() < 1078 && e.getX() > 0 && startGame) {
             borderX = e.getX();
         }
 
+    }
+
+    BitSet keybits = new BitSet(256);
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        keybits.set(e.getKeyCode());
+
+        if (keybits.get(KeyEvent.VK_RIGHT)) {
+            ballX += 5;
+        }
+        if (keybits.get(KeyEvent.VK_LEFT)) {
+            ballX -= 5;
+        }
+        if (keybits.get(KeyEvent.VK_UP)) {
+            ballX = 550;
+            ballY = 300;
+        }
+        if (keybits.get(KeyEvent.VK_DOWN)) {
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        keybits.clear(e.getKeyCode());
     }
 
 }
