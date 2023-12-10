@@ -23,23 +23,26 @@ import javax.sound.sampled.Clip;
 public class Ball_File extends AnimListener implements GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 
     TextRenderer ren = new TextRenderer(new Font("sanaSerif", Font.BOLD, 10));
-
+//    Square
     AudioInputStream audioStream;
     Clip clip;
     ArrayList<block> blocksArray = new ArrayList<>();
     GL gl;
     String page = "Home", level, direction = "up-right";
     boolean sound = true, startGame;
-//    block[] blocksArray = new block[42];
     int maxWidth = 1200, maxHeight = 700, borderX = 550, borderY = 680, ballX = 550, ballY = 655,
             speed = 20, borderSize = 130, lives = 3, delayLives;
 
-    String textureNames[] = {"home", "empty", "credits", "how_to_play", "sound", "no_sound", "levels", "ball", "border", "square"};
+    String textureNames[] = {"home", "empty", "credits", "how_to_play", "sound", "no_sound", "levels",
+        "ball", "border", "square", "pause"};
     TextureReader.Texture[] texture = new TextureReader.Texture[textureNames.length];
     int textures[] = new int[textureNames.length];
 
     @Override
     public void init(GLAutoDrawable gld) {
+        for (int i = 0; i < textureNames.length; i++) {
+            System.out.println(i + " = " + textureNames[i]);
+        }
         try {
             audioStream = AudioSystem.getAudioInputStream(new File("Assets//songs//converted_background_music.wav"));
             clip = AudioSystem.getClip();
@@ -105,7 +108,9 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
                 borderCollision();
                 bounceBall();
                 break;
-
+            case "pause":
+                DrawBackground(10);
+                break;
         }
 
     }
@@ -210,7 +215,6 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
         } else if (ballY > 645 && ballX - borderX + 70 < borderSize / 2 && ballX - borderX + 70 > 0) {
             direction = "up-left";
         } else if (ballY > 700) {
-
             Lose();
         }
     }
@@ -236,12 +240,12 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
             borderX = 550;
             borderY = 680;
             delayLives = 0;
+//            drawBlocks();
             if (lives == 0) {
+                lives = 3;
                 page = "Home";
             }
         }
-
-        System.out.println("GameOver");
     }
 
     public void drawBlocks() {
@@ -257,6 +261,31 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
             }
             drawObject(x, y, 0.5, 0.5, 9);
             x += 70;
+        }
+    }
+
+//     public boolean collion_left() {
+//        return (ball.intersect(new rectangle(pos_x1 - 25, pos_y1 + 5, 30, 25)) // 295 , 80 , 325 , 55 
+//                || ball.intersect(new rectangle(pos_x2 - 25, pos_y2 + 5, 30, 25)));   // 295 , 830 , 325 , 805 
+//    }
+// 
+//    public boolean collion_up() {
+//        return ball.intersect(new rectangle(pos_x1 + 5, pos_y1 + 35, 40, 30)) // 325 , 110 , 365 , 80 
+//                || ball.intersect(new rectangle(pos_x2 + 5, pos_y2 + 35, 40, 30)); // 325 , 860 , 365 , 830 
+//    }
+//
+//    public boolean collion_right() {
+//        return ball.intersect(new rectangle(pos_x1 + 45, pos_y1 + 5, 30, 25)) // 365 , 80 , 395 , 55 
+//                || ball.intersect(new rectangle(pos_x2 + 45, pos_y2 + 5, 30, 25));   // 365 , 830 , 395 , 805
+//    }
+//
+//    public boolean collion_down() {
+//        return ball.intersect(new rectangle(pos_x1 + 5, pos_y1 - 35, 40, 30)) // 325 , 55 , 365 , 25 
+//                || ball.intersect(new rectangle(pos_x2 + 5, pos_y2 - 35, 40, 30));   // 325 , 805 , 365 , 775
+//    }
+    void blocksCollsion() {
+        for (block block : blocksArray) {
+
         }
     }
 
@@ -312,7 +341,36 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
                     page = "Home";
                 }
                 break;
+
+            case "pause":
+                if (e.getX() > 507 && e.getX() < 736 && e.getY() > 228 && e.getY() < 279) {
+                    System.out.println("resume");
+                    page = "Game";
+                }
+                if (e.getX() > 506 && e.getX() < 733 && e.getY() > 339 && e.getY() < 387) {
+                    System.out.println("restart");
+                    reset();
+                    page = "Game";
+                }
+                if (e.getX() > 557 && e.getX() < 681 && e.getY() > 451 && e.getY() < 502) {
+                    System.out.println("exit");
+                    page = "Home";
+                    reset();
+                }
+                break;
         }
+    }
+
+    void reset() {
+//        time = 0 ;
+//        score = 0;
+//        drawBlocks();
+        lives = 3;
+        direction = "up-right";
+        ballX = 550;
+        ballY = 655;
+        borderX = 550;
+        borderY = 680;
     }
 
     @Override
@@ -337,8 +395,8 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        System.out.println(e.getX() + " " + e.getY());
-        System.out.println("ball = " + ballX + " " + ballY);
+//        System.out.println(e.getX() + " " + e.getY());
+
         if (e.getX() < 1078 && e.getX() > 0 && startGame) {
             borderX = e.getX();
         }
@@ -367,6 +425,11 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
         }
         if (keybits.get(KeyEvent.VK_DOWN)) {
         }
+
+        if (keybits.get(KeyEvent.VK_ESCAPE) || keybits.get(KeyEvent.VK_P)) {
+            page = "pause";
+            startGame = !startGame;
+        }
     }
 
     @Override
@@ -379,9 +442,31 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
 class block {
 
     int x, y;
+    boolean crach;
 
     block(int x, int y) {
         this.x = x;
         this.y = y;
     }
+}
+
+class rectangle {
+
+    int lx, ly, rx, ry;
+
+    rectangle(int x, int y, int width, int height) {
+        lx = x;
+        ly = y;
+        rx = width + x;
+        ry = y - height;
+    }
+
+    boolean intersect(rectangle r) {
+
+        if (lx > r.rx || r.lx > rx) {
+            return false;
+        }
+        return !(ry > r.ly || r.ry > ly);
+    }
+
 }
