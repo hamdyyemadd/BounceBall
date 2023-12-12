@@ -31,9 +31,9 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
     String page = "Home", level, direction = "up-right";
     boolean sound = true, startGame;
     int maxWidth = 1200, maxHeight = 700, borderX = 550, borderY = 680, ballX = 550, ballY = 655,
-            speed = 10, borderSize = 130, lives = 3, delayLives, numberofBlocks, score, time, delaytime;
+            speed = 10, borderSize = 130, lives = 3, delayLives, numberofBlocks, score, time, delaytime, highScore;
 
-    String textureNames[] = {"home", "empty", "credits", "how_to_play", "sounds", "no_sound", "levels",
+    String textureNames[] = {"home", "empty", "credits", "how_to_play", "sound", "no_sound", "levels",
         "ball", "border", "square", "pause", "loser", "won", "last-win"};
     TextureReader.Texture[] texture = new TextureReader.Texture[textureNames.length];
     int textures[] = new int[textureNames.length];
@@ -120,40 +120,54 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
                     page = "Lastwin";
                 }
                 // 42 - 70 - 98
-                // Update time format
-                int minutes = time / 60;
-                int seconds = time % 60;
-                String formattedTime = String.format("%02dm:%02ds", minutes, seconds);
 
-                delaytime++;
-                if (delaytime > 20 && startGame) {
-                    delaytime = 0;
-                    time++;
-                }
-                ren.beginRendering(300, 300);
-                ren.setColor(Color.WHITE);
-                ren.draw("Score: " + score, 5, 285);
-
-                ren.draw("Time: " + formattedTime, 210, 285);
-                ren.setColor(Color.WHITE);
-                ren.endRendering();
+                displayTime();
                 break;
             case "Pause":
                 DrawBackground(10);
+                displayHighScore();
                 break;
             case "Lose":
                 DrawBackground(11);
+                displayHighScore();
                 break;
             case "Win":
                 DrawBackground(12);
+                displayHighScore();
                 break;
             case "Lastwin":
                 DrawBackground(13);
+                displayHighScore();
                 break;
         }
 
     }
 
+    private void displayTime() {
+        int minutes = time / 60;
+        int seconds = time % 60;
+        String formattedTime = String.format("%02dm:%02ds", minutes, seconds);
+
+        delaytime++;
+        if (delaytime > 20 && startGame) {
+            delaytime = 0;
+            time++;
+        }
+        ren.beginRendering(300, 300);
+        ren.setColor(Color.WHITE);
+        ren.draw("Score: " + score, 5, 285);
+
+        ren.draw("Time: " + formattedTime, 210, 285);
+        ren.setColor(Color.WHITE);
+        ren.endRendering();
+    }
+    private void displayHighScore() {
+        ren.beginRendering(300, 300);
+        ren.setColor(Color.WHITE);
+        ren.draw("High Score: " + highScore, 5, 285);
+        ren.setColor(Color.WHITE);
+        ren.endRendering();
+    }
     @Override
     public void reshape(GLAutoDrawable glad, int i, int i1, int i2, int i3) {
     }
@@ -283,6 +297,10 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
             if (lives == 0) {
                 time = 0;
                 createBlocks();
+                if (score > highScore) {
+                    highScore = score;
+                    System.out.println("highscroe is" + highScore);
+                }
                 score = 0;
                 lives = 3;
                 page = "Lose";
@@ -343,6 +361,9 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
                 score++;
             }
             System.out.println("score = " + score);
+            if (score > highScore) {
+                highScore = score;
+            }
 
         }
     }
@@ -453,6 +474,9 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
     }
 
     void reset() {
+        if (score > highScore) {
+            highScore = score;
+        }
         time = 0 ;
         startGame = false;
         score = 0;
