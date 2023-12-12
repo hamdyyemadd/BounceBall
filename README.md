@@ -1,6 +1,6 @@
 # BounceBall
  Graphics Project - Bounce Ball
-
+ Before starting you need to include JOGLwin library in the project
 # Instructions:
   - To start the game you can choose the appropraite level, (easy, medium & hard).
   - The game is easy just press one left mouse-click to start bouncing the ball untill you finish all the blocks.

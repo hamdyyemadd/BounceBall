@@ -31,7 +31,7 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
     String page = "Home", level, direction = "up-right";
     boolean sound = true, startGame;
     int maxWidth = 1200, maxHeight = 700, borderX = 550, borderY = 680, ballX = 550, ballY = 655,
-            speed = 7, borderSize = 130, lives = 3, delayLives, numberofBlocks, score, time, delaytime;
+            speed = 10, borderSize = 130, lives = 3, delayLives, numberofBlocks, score, time, delaytime;
 
     String textureNames[] = {"home", "empty", "credits", "how_to_play", "sounds", "no_sound", "levels",
         "ball", "border", "square", "pause", "loser", "won", "last-win"};
@@ -44,7 +44,7 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
             System.out.println(i + " = " + textureNames[i]);
         }
         try {
-            audioStream = AudioSystem.getAudioInputStream(new File("Assets//songs//converted_background_music.wav"));
+            audioStream = AudioSystem.getAudioInputStream(new File("src//Assets//songs//converted_background_music.wav"));
             clip = AudioSystem.getClip();
             clip.open(audioStream);
             clip.start();
@@ -90,9 +90,13 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
             case "Home":
                 DrawBackground(0);
                 int index = sound ? 4 : 5;
-                drawObject(100, 130, 2, 2, index);
+                if(index == 4){
+                    drawObject(100, 130, 2, 2, index);
+                }else{
+                    drawObject(100, 130, 1, 1, index);
+                }
                 break;
-            case "Play":
+            case "Level":
                 DrawBackground(6);
                 break;
             case "Credits":
@@ -110,22 +114,27 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
                 borderCollision();
                 bounceBall();
                 blocksCollsion();
-                if ((level == "easy" && score >= 5) || (level == "medium" && score >= 5)) {
+                if ((level == "easy" && score >= 7) || (level == "medium" && score >= 70)) {
                     page = "Win";
-                } else if (score >= 5) {
+                } else if (score >= 98) {
                     page = "Lastwin";
                 }
                 // 42 - 70 - 98
+                // Update time format
+                int minutes = time / 60;
+                int seconds = time % 60;
+                String formattedTime = String.format("%02dm:%02ds", minutes, seconds);
+
                 delaytime++;
                 if (delaytime > 20 && startGame) {
                     delaytime = 0;
                     time++;
                 }
                 ren.beginRendering(300, 300);
-                ren.setColor(Color.RED);
+                ren.setColor(Color.WHITE);
                 ren.draw("Score: " + score, 5, 285);
 
-                ren.draw("Time: " + time, 250, 285);
+                ren.draw("Time: " + formattedTime, 210, 285);
                 ren.setColor(Color.WHITE);
                 ren.endRendering();
                 break;
@@ -301,7 +310,7 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
     public void drawBlocks() {
         numberofBlocks = level == "easy" ? 42 : level == "medium" ? 70 : 98;
         for (int i = 0; i < numberofBlocks; i++) {
-            if (!blocksArray.get(i).crach) {
+            if (!blocksArray.get(i).crash) {
                 drawObject(blocksArray.get(i).x, blocksArray.get(i).y, 0.5, 0.5, 9);
             }
         }
@@ -312,24 +321,24 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
         // widthball = 35 , heightball = 25 , widthblock = 65 , heightblock = 35 ; 
         for (int i = 0; i < numberofBlocks; i++) {
             block block = blocksArray.get(i);
-            if (ball.intersect(new rectangle(block.x - 5, block.y, 45, 10)) && !block.crach) {
+            if (ball.intersect(new rectangle(block.x - 5, block.y, 45, 10)) && !block.crash) {
                 direction = direction == "up-right" ? "down-right" : "down-left";
-                block.crach = true;
+                block.crash = true;
                 System.out.println("down");
                 score++;
-            } else if (ball.intersect(new rectangle(block.x - 5, block.y - 15, 45, 10)) && !block.crach) {
+            } else if (ball.intersect(new rectangle(block.x - 5, block.y - 15, 45, 10)) && !block.crash) {
                 direction = direction == "down-right" ? "up-right" : "up-left";
-                block.crach = true;
+                block.crash = true;
                 System.out.println("up");
                 score++;
-            } else if (ball.intersect(new rectangle(block.x - 10, block.y, 5, 25)) && !block.crach) {
+            } else if (ball.intersect(new rectangle(block.x - 10, block.y, 5, 25)) && !block.crash) {
                 direction = direction == "up-right" ? "up-left" : "down-left";
-                block.crach = true;
+                block.crash = true;
                 System.out.println("left");
                 score++;
-            } else if (ball.intersect(new rectangle(block.x + 40, block.y, 5, 25)) && !block.crach) {
+            } else if (ball.intersect(new rectangle(block.x + 40, block.y, 5, 25)) && !block.crash) {
                 direction = direction == "up-left" ? "up-right" : "down-right";
-                block.crach = true;
+                block.crash = true;
                 System.out.println("right");
                 score++;
             }
@@ -345,7 +354,7 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
             // if Home Screen
             case "Home":
                 if (e.getX() > 546 && e.getX() < 685 && e.getY() < 277 && e.getY() > 225) {
-                    page = "Play";
+                    page = "Level";
                 } else if (e.getX() > 427 && e.getX() < 805 && e.getY() < 388 && e.getY() > 334) {
                     page = "How_To_Play";
                 } else if (e.getX() > 510 && e.getX() < 722 && e.getY() < 499 && e.getY() > 443) {
@@ -362,7 +371,7 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
                     }
                 }
                 break;
-            case "Play":
+            case "Level":
                 if (e.getX() > 350 && e.getX() < 445 && e.getY() > 330 && e.getY() < 430) {
                     page = "Game";
                     level = "easy";
@@ -407,7 +416,17 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
                 }
                 break;
             case "Lose":
+                if (e.getX() > 116 && e.getX() < 255 && e.getY() > 509 && e.getY() < 561) {
+                    System.out.println("exit");
+                    page = "Home";
+                    reset();
 
+                }
+                if (e.getX() > 808 && e.getX() < 1109 && e.getY() > 507 && e.getY() < 562) {
+                    System.out.println("restart");
+                    reset();
+                    page = "Game";
+                }
                 break;
             case "Win":
                 if (e.getX() > 119 && e.getX() < 253 && e.getY() > 519 && e.getY() < 563) {
@@ -502,8 +521,18 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
         }
 
         if (keybits.get(KeyEvent.VK_ESCAPE) || keybits.get(KeyEvent.VK_P)) {
-            page = "Pause";
-            startGame = !startGame;
+            if(page == "Game"){
+                page = "Pause";
+                startGame = !startGame;
+            }
+        }
+        if (keybits.get(KeyEvent.VK_M) ) {
+            sound = !sound;
+            if (sound) {
+                clip.start();
+            } else {
+                clip.stop();
+            }
         }
     }
 
@@ -515,38 +544,3 @@ public class Ball_File extends AnimListener implements GLEventListener, MouseLis
 
 }
 
-class block {
-
-    int x, y;
-    boolean crach;
-
-    block(int x, int y) {
-        this.x = x;
-        this.y = y;
-
-    }
-}
-
-class rectangle {
-
-    int lx, ly, rx, ry;
-
-    rectangle(int x, int y, int width, int height) {
-        lx = x;
-        ly = y;
-        rx = width + x;
-        ry = y - height;
-    }
-
-    boolean intersect(rectangle r) {
-
-        if (lx > r.rx || r.lx > rx) {
-            return false;
-        }
-        if (ry > r.ly || r.ry > ly) {
-            return false;
-        }
-        return true;
-    }
-
-}
